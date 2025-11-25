@@ -6,6 +6,7 @@ from settings import *
 from scenes.menu_scene import MenuScene
 from scenes.intro_scene import IntroScene
 from scenes.map_scene import MapScene
+from scenes.puzzle_papa import PapaPuzzleScene
 
 def main():
     pygame.init()
@@ -34,17 +35,51 @@ def main():
         intro.draw()
         clock.tick(FPS)
 
-    # Mapa principal
-    map_scene = MapScene(screen)
-    while map_scene.running:
-        dt = clock.tick(FPS) / 1000.0  # Delta time en segundos
-        events = pygame.event.get()
-        map_scene.handle_events(events)
-        map_scene.update(dt)
-        map_scene.draw()
+    # Estado del inventario (compartido)
+    inventory = {
+        "papa": False,
+        "carne": False,
+        "verduras": False
+    }
 
-    # Aquí iría: cargar minijuego según map_scene.next_minigame
-    print(f"Minijuego a cargar: {map_scene.next_minigame}")
+    run_map = True
+    while run_map:
+        map_scene = MapScene(screen)
+        # Restaurar estado del inventario en las zonas
+        for item in inventory:
+            map_scene.zones[item]["completed"] = inventory[item]
+
+        # Ejecutar mapa
+        while map_scene.running:
+            dt = clock.tick(FPS) / 1000.0
+            events = pygame.event.get()
+            map_scene.handle_events(events)
+            map_scene.update(dt)
+            map_scene.draw()
+
+        # ¿Qué minijuego se debe cargar?
+        if hasattr(map_scene, 'next_minigame'):
+            minigame_name = map_scene.next_minigame
+
+            if minigame_name == "papa" and not inventory["papa"]:
+                puzzle = PapaPuzzleScene(screen)
+                # En el bucle del minijuego
+                while puzzle.running:
+                    dt = clock.tick(FPS) / 1000.0
+                    events = pygame.event.get()
+                    puzzle.handle_events(events)
+                    puzzle.update(dt)  # ← ahora recibe dt
+                    puzzle.draw()
+                # Marcar como completado
+                inventory["papa"] = True
+
+            # Aquí irán los otros minijuegos más adelante
+            else:
+                # Si ya está resuelto, volver al mapa
+                pass
+
+        else:
+            run_map = False
 
     pygame.quit()
     sys.exit()

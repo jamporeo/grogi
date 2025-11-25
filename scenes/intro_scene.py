@@ -3,7 +3,7 @@ import pygame
 import os
 from settings import *
 from engine.dialog_box import DialogBox
-from narrative.scripts import INTRO_DIALOGUE, VOICES
+from narrative.scripts import INTRO_DIALOGUE  # Solo INTRO_DIALOGUE
 
 class IntroScene:
     def __init__(self, screen):
@@ -12,14 +12,11 @@ class IntroScene:
         self.background = pygame.image.load(os.path.join(IMAGES_DIR, "intro_background.png")).convert()
         self.background = pygame.transform.scale(self.background, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
-        # Cargar personajes (opcional, si tienes sprites)
-        self.char1 = None  # Narrador
-        self.char2 = None  # Zoóloga
-        try:
-            self.char2 = pygame.image.load(os.path.join(IMAGES_DIR, "character2.png")).convert_alpha()
-        except:
-            pass  # Si no hay imagen, sigue sin problema
-        
+        # Cargar personaje (opcional)
+        self.char2 = None
+        char_path = os.path.join(IMAGES_DIR, "character2.png")
+        if os.path.exists(char_path):
+            self.char2 = pygame.image.load(char_path).convert_alpha()
 
         self.dialog_index = 0
         self.waiting_for_input = True
@@ -36,9 +33,11 @@ class IntroScene:
         self.current_speaker = dialog["speaker"]
         self.waiting_for_input = True
 
-        # Aquí podrías reproducir sonido según el hablante
+        # Reproducir sonido si es la Zoóloga
         if dialog["speaker"] == "Zoóloga":
-            sound_file = os.path.join(AUDIO_DIR, VOICES.get("Zoologa", ""))
+            sound_file = os.path.join(AUDIO_DIR, "Voz_Zoologa.ogg")
+            if not os.path.exists(sound_file):
+                sound_file = os.path.join(AUDIO_DIR, "Voz_Zoologa.wav")
             if os.path.exists(sound_file):
                 pygame.mixer.Sound(sound_file).play()
 
@@ -58,10 +57,8 @@ class IntroScene:
     def draw(self):
         self.screen.blit(self.background, (0, 0))
 
-        # Dibujar personaje (opcional)
         if self.char2:
             self.screen.blit(self.char2, (SCREEN_WIDTH - 200, SCREEN_HEIGHT - 300))
 
         self.dialog_box.draw(self.screen)
-
         pygame.display.flip()

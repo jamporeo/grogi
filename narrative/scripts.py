@@ -19,15 +19,18 @@ INTRO_DIALOGUE = [
     }
 ]
 
+# --- Acertijo de la Papa ---
+PAPA_RIDDLE = {
+    "question": "Soy redonda, crezco bajo tierra y soy esencial para el pastel que salvará al mundo.\n¿Quién soy?",
+    "options": ["A) Zanahoria", "B) Papa", "C) Cebolla"],
+    "correct": 1,  # índice de la respuesta correcta (B)
+    "success_message": "¡Enhorabuena! ¡Has conseguido la bolsa de papas!",
+    "failure_message": "Mmm... esa no es la verdadera papa sagrada. Inténtalo de nuevo."
+}
+
 NARRATOR_VOICES = {
     "papa": "¡Enhorabuena! ¡Has conseguido la bolsa de papas!",
     "carne": "¡Bien hecho! La carne molida está lista.",
     "verduras": "Las verduras están frescas y listas para usar.",
     "final": "Muy bien, Zoóloga. Ahora son 50 pasteles más para eliminar la corrupción."
-}
-
-# Mapeo de hablantes a archivos de audio
-VOICES = {
-    "Zoologa": "Voz_Zoologa.ogg",
-    "Narrador": "Voz_Narrador.ogg"
 }
