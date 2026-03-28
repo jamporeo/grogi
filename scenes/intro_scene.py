@@ -40,6 +40,24 @@ class IntroScene:
                 sound_file = os.path.join(AUDIO_DIR, "Voz_Zoologa.wav")
             if os.path.exists(sound_file):
                 pygame.mixer.Sound(sound_file).play()
+        if dialog["speaker"] == "Mecánica":
+            sound_file = os.path.join(AUDIO_DIR, "Voz_Mecanica.ogg")
+            if not os.path.exists(sound_file):
+                sound_file = os.path.join(AUDIO_DIR, "Voz_Mecanica.wav")
+            if os.path.exists(sound_file):
+                pygame.mixer.Sound(sound_file).play()
+        if dialog["speaker"] == "Steampunker":
+            sound_file = os.path.join(AUDIO_DIR, "Voz_Steampunker.ogg")
+            if not os.path.exists(sound_file):
+                sound_file = os.path.join(AUDIO_DIR, "Voz_Steampunker.wav")
+            if os.path.exists(sound_file):
+                pygame.mixer.Sound(sound_file).play()
+        if dialog["speaker"] == "Narrador":
+            sound_file = os.path.join(AUDIO_DIR, "Voz_Narrador.ogg")
+            if not os.path.exists(sound_file):
+                sound_file = os.path.join(AUDIO_DIR, "Voz_Narrador.wav")
+            if os.path.exists(sound_file):
+                pygame.mixer.Sound(sound_file).play()
 
     def handle_events(self, events):
         for event in events:

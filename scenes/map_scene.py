@@ -4,36 +4,36 @@ import os
 from settings import *
 from engine.dialog_box import DialogBox
 
+
 class MapScene:
     def __init__(self, screen):
         self.screen = screen
         self.running = True
 
-        # Cargar fondo del mapa
         self.background = pygame.image.load(os.path.join(IMAGES_DIR, "map_background.png")).convert()
         self.background = pygame.transform.scale(self.background, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
-        # Cargar sprites de la Zoóloga
         self.load_player_sprites()
 
-        # Posición inicial del jugador
         self.player_pos = pygame.Vector2(100, SCREEN_HEIGHT - 150)
         self.target_pos = self.player_pos.copy()
         self.moving = False
-        self.speed = 200  # píxeles por segundo
+        self.speed = 200
 
-        # Dirección y animación
         self.facing_right = True
         self.current_sprite = self.idle_right
 
-        # Sonido de caminar
+        # Para la animación de caminata
+        self.walk_frame = 0
+        self.walk_timer = 0
+        self.walk_frame_duration = 0.175  # segundos por frame
+
         try:
             self.walk_sound = pygame.mixer.Sound(os.path.join(AUDIO_DIR, "walk.wav"))
             self.walk_sound.set_volume(0.4)
         except:
             self.walk_sound = None
 
-        # Zonas interactivas
         self.zones = {
             "papa": {
                 "rect": pygame.Rect(230, 470, 100, 100),
@@ -41,27 +41,24 @@ class MapScene:
                 "icon": pygame.image.load(os.path.join(IMAGES_DIR, "icon_papa.png")).convert_alpha()
             },
             "carne": {
-                "rect": pygame.Rect(500, 250, 100, 100),
+                "rect": pygame.Rect(500, 350, 100, 100),
                 "completed": False,
                 "icon": pygame.image.load(os.path.join(IMAGES_DIR, "icon_carne.png")).convert_alpha()
             },
-            "verduras": {
-                "rect": pygame.Rect(705, 430, 100, 100),
+            "queso": {  # ← Cambiado de "verduras" a "queso"
+                "rect": pygame.Rect(705, 430, 100, 100),  # ← Misma posición que antes
                 "completed": False,
-                "icon": pygame.image.load(os.path.join(IMAGES_DIR, "icon_verduras.png")).convert_alpha()
+                "icon": pygame.image.load(os.path.join(IMAGES_DIR, "icon_queso.png")).convert_alpha()  # ← Nuevo ícono
             },
         }
 
-        # Escalar íconos a 80x80 si no lo están
         for zone in self.zones.values():
             zone["icon"] = pygame.transform.scale(zone["icon"], (80, 80))
 
-        # Cuadro de diálogo
         self.dialog_box = DialogBox()
         self.show_hint = False
         self.hint_timer = 0
 
-        # Música de fondo
         try:
             pygame.mixer.music.load(os.path.join(AUDIO_DIR, "Musica.mp3"))
             pygame.mixer.music.play(-1)
@@ -69,14 +66,12 @@ class MapScene:
             pass
 
     def load_player_sprites(self):
-        """Carga los 4 sprites del personaje"""
         def load_or_default(filename, size=(60, 80)):
             path = os.path.join(IMAGES_DIR, filename)
             if os.path.exists(path):
                 img = pygame.image.load(path).convert_alpha()
                 return pygame.transform.scale(img, size)
             else:
-                # Crear sprite de reemplazo
                 surf = pygame.Surface(size, pygame.SRCALPHA)
                 color = (255, 0, 0) if "Izquierda" in filename else (0, 0, 255)
                 pygame.draw.rect(surf, color, surf.get_rect())
@@ -95,28 +90,22 @@ class MapScene:
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.Vector2(event.pos)
 
-                # Verificar clic en zonas
+                # Mensajes amigables actualizados
+                NICE_NAMES = {"papa": "papas", "carne": "carne molida", "queso": "queso"}
+
                 for name, zone in self.zones.items():
                     if zone["rect"].collidepoint(mouse_pos):
                         if not zone["completed"]:
                             self.start_minigame(name)
                         else:
-                            self.dialog_box.set_text(f"Ya recogiste las {name}.")
+                            self.dialog_box.set_text(f"Ya tienes {NICE_NAMES.get(name, name)}.")
                             self.show_hint = True
                             self.hint_timer = 0
-                        return  # Solo una acción por clic
+                        return
 
-                # Si no es zona, mover jugador
                 self.target_pos = mouse_pos.copy()
                 self.moving = True
-
-                # Determinar dirección
-                if self.target_pos.x > self.player_pos.x:
-                    self.facing_right = True
-                else:
-                    self.facing_right = False
-
-                # Reproducir sonido de caminar
+                self.facing_right = self.target_pos.x > self.player_pos.x
                 if self.walk_sound and not pygame.mixer.get_busy():
                     self.walk_sound.play()
 
@@ -134,20 +123,26 @@ class MapScene:
                 if movement.length() >= distance:
                     self.player_pos = self.target_pos.copy()
                     self.moving = False
-                    # Al detenerse, usar sprite quieto
                     self.current_sprite = self.idle_right if self.facing_right else self.idle_left
                 else:
                     self.player_pos += movement
-                    # Mientras camina, usar sprite de caminar
-                    self.current_sprite = self.walk_right if self.facing_right else self.walk_left
+
+                    # Animación de caminata: alternar entre caminar y quieto
+                    self.walk_timer += dt
+                    if self.walk_timer >= self.walk_frame_duration:
+                        self.walk_timer = 0
+                        self.walk_frame = (self.walk_frame + 1) % 2  # 0 o 1
+
+                    if self.walk_frame == 0:
+                        self.current_sprite = self.walk_right if self.facing_right else self.walk_left
+                    else:
+                        self.current_sprite = self.idle_right if self.facing_right else self.idle_left
             else:
                 self.moving = False
                 self.current_sprite = self.idle_right if self.facing_right else self.idle_left
         else:
-            # Asegurar que esté en sprite quieto
             self.current_sprite = self.idle_right if self.facing_right else self.idle_left
 
-        # Manejo de mensaje temporal
         if self.show_hint:
             self.hint_timer += dt
             if self.hint_timer > 2.0:
@@ -157,20 +152,13 @@ class MapScene:
     def draw(self):
         self.screen.blit(self.background, (0, 0))
 
-        # Dibujar zonas con íconos
         for zone in self.zones.values():
-            rect = zone["rect"]
-            # Sombras o bordes opcionales
-            pygame.draw.rect(self.screen, (50, 50, 50), rect, 2)
-            # Ícono centrado
-            icon_rect = zone["icon"].get_rect(center=rect.center)
+            pygame.draw.rect(self.screen, (50, 50, 50), zone["rect"], 2)
+            icon_rect = zone["icon"].get_rect(center=zone["rect"].center)
             self.screen.blit(zone["icon"], icon_rect)
 
-        # Dibujar jugador centrado en su posición (el sprite ya incluye offset visual)
         player_rect = self.current_sprite.get_rect(midbottom=(int(self.player_pos.x), int(self.player_pos.y)))
         self.screen.blit(self.current_sprite, player_rect)
 
-        # Diálogo
         self.dialog_box.draw(self.screen)
-
         pygame.display.flip()

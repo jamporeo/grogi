@@ -1,0 +1,11 @@
+                            JAMP GENERAL PUBLIC LICENSE V1.0
+             Copyright © 2026 JampDev / JampOreo <https://github.com/JampOreo>
+
+This license can be only used for JampDev / JampOreo projects and repositories, changing
+                                   it is not allowed.
+
+                                      TERMS OF USE
+
+With the Jamp General Public License you are allowed to redistribute the repositories and
+  projects done by the user JampDev / JampOreo, but you can't modify it or monetize out
+     of it. You can only modify it if you have the permission of JampDev / Jamp Oreo.
